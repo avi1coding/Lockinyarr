@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LockIn - Study Timer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Orbitron:wght@400;700;900&family=Press+Start+2P&family=Bebas+Neue&family=Righteous&family=Monoton&family=Major+Mono+Display&family=Black+Ops+One&family=Bungee+Shade&family=Silkscreen&family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;700&family=Fira+Code:wght@400;700&family=Source+Code+Pro:wght@400;700&family=IBM+Plex+Mono:wght@400;700&family=Courier+Prime:wght@400;700&family=Share+Tech+Mono&family=VT323&family=Pixelify+Sans:wght@400;700&family=Nova+Mono&family=Chakra+Petch:wght@400;700&family=Michroma&family=Russo+One&family=Audiowide&family=Rajdhani:wght@400;700&family=Tektur:wght@400;700&family=Electrolize&family=Oxanium:wght@400;700&family=Saira+Stencil+One&family=Tourney:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#07070d;--surface:#111120;--surface2:#191930;--border:#252545;--text:#e8e8f0;--text-dim:#6b6b8a;--accent:#7c5cfc;--accent2:#b8a4ff;--danger:#ff5c5c;--success:#4cd964;--glow:rgba(124,92,252,0.15)}
+html,body{height:100%;min-height:100dvh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+
+/* ── Nav ── */
+.nav{position:fixed;top:0;left:0;right:0;height:56px;background:rgba(7,7,13,0.85);backdrop-filter:blur(24px) saturate(1.4);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;z-index:100}
+.nav-logo{font-size:20px;font-weight:800;background:linear-gradient(135deg,#7c5cfc,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:3px}
+.nav-tabs{display:flex;gap:2px;background:var(--surface);border-radius:10px;padding:3px}
+.nav-tab{padding:7px 22px;border:none;background:transparent;color:var(--text-dim);font-size:13px;cursor:pointer;border-radius:8px;transition:all .2s;font-weight:600}
+.nav-tab:hover{color:var(--text)}
+.nav-tab.active{color:#fff;background:var(--accent)}
+
+/* ── Pages ── */
+.page{display:none;padding-top:76px;min-height:100vh}
+.page.active{display:block}
+
+/* ── Setup ── */
+.setup-container{max-width:1280px;margin:0 auto;padding:20px 24px;display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.setup-left,.setup-right{display:flex;flex-direction:column;gap:18px;min-width:0}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px 24px;min-width:0}
+.card-title{font-size:11px;text-transform:uppercase;letter-spacing:2.5px;color:var(--text-dim);margin-bottom:14px;font-weight:700}
+
+/* Time Input */
+.time-input-group{display:flex;gap:10px;align-items:center;justify-content:center}
+.time-input{width:96px;text-align:center;font-size:44px;font-weight:700;background:var(--surface2);border:2px solid var(--border);color:var(--text);border-radius:14px;padding:10px 6px;outline:none;transition:all .2s;font-variant-numeric:tabular-nums}
+.time-input:focus{border-color:var(--accent);box-shadow:0 0 20px var(--glow)}
+.time-sep{font-size:40px;font-weight:300;color:var(--text-dim);margin:0 -2px}
+.time-label{font-size:10px;color:var(--text-dim);text-align:center;margin-top:5px;letter-spacing:1.5px;font-weight:600}
+.time-col{display:flex;flex-direction:column}
+
+.quick-times{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;justify-content:center}
+.quick-time{padding:7px 16px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);border-radius:20px;cursor:pointer;font-size:12px;transition:all .2s;font-weight:600}
+.quick-time:hover{border-color:var(--accent);color:var(--accent2);background:rgba(124,92,252,0.08)}
+
+/* Design Options */
+.option-group{margin-bottom:14px;min-width:0;max-width:100%}
+.option-label{font-size:12px;color:var(--text-dim);margin-bottom:7px;display:flex;justify-content:space-between;font-weight:600}
+.option-label span{color:var(--accent2);font-weight:700;font-size:11px}
+.option-scroll{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;padding-bottom:6px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;cursor:grab;-webkit-overflow-scrolling:touch;touch-action:pan-x;max-width:100%;flex-wrap:nowrap}
+.option-scroll::-webkit-scrollbar{height:3px}
+.option-scroll::-webkit-scrollbar-track{background:transparent}
+.option-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.option-scroll.dragging{cursor:grabbing;scroll-behavior:auto}
+
+.option-btn{flex-shrink:0;padding:7px 14px;background:var(--surface2);border:2px solid var(--border);color:var(--text-dim);border-radius:10px;cursor:pointer;font-size:12px;transition:all .2s;white-space:nowrap;font-weight:500}
+.option-btn:hover{border-color:var(--accent);color:var(--text)}
+.option-btn.selected{border-color:var(--accent);background:rgba(124,92,252,0.12);color:var(--accent2)}
+
+/* Color Swatches */
+.color-grid{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;padding-bottom:6px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;cursor:grab;-webkit-overflow-scrolling:touch;touch-action:pan-x;max-width:100%;flex-wrap:nowrap}
+.color-grid::-webkit-scrollbar{height:3px}
+.color-grid::-webkit-scrollbar-track{background:transparent}
+.color-grid::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.color-grid.dragging{cursor:grabbing;scroll-behavior:auto}
+.color-swatch{width:32px;height:32px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:all .15s;flex-shrink:0}
+.color-swatch:hover{transform:scale(1.2)}
+.color-swatch.selected{border-color:#fff;box-shadow:0 0 14px rgba(255,255,255,0.25)}
+
+/* BG Options */
+.bg-grid{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;padding-bottom:6px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;cursor:grab;-webkit-overflow-scrolling:touch;touch-action:pan-x;max-width:100%;flex-wrap:nowrap}
+.bg-grid::-webkit-scrollbar{height:3px}
+.bg-grid::-webkit-scrollbar-track{background:transparent}
+.bg-grid::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.bg-grid.dragging{cursor:grabbing;scroll-behavior:auto}
+.bg-option{height:48px;min-width:80px;flex-shrink:0;border-radius:10px;border:2px solid var(--border);cursor:pointer;transition:all .15s;font-size:9px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.8);text-shadow:0 1px 4px rgba(0,0,0,0.6);font-weight:700;letter-spacing:.5px;padding:0 10px}
+.bg-option:hover{border-color:rgba(124,92,252,0.4)}
+.bg-option.selected{border-color:var(--accent2);box-shadow:0 0 16px rgba(124,92,252,0.35)}
+
+/* Preview */
+.preview-box{height:260px;border-radius:18px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;transition:all .3s}
+.preview-time{font-size:64px;z-index:1;transition:all .3s}
+.preview-particles{position:absolute;inset:0;z-index:0;pointer-events:none}
+
+.combo-count{text-align:center;padding:10px;font-size:12px;color:var(--text-dim)}
+.combo-count strong{color:var(--accent2);font-size:20px;font-weight:800}
+
+/* Start Button */
+.start-btn{width:100%;padding:18px;font-size:16px;font-weight:800;border:none;border-radius:14px;cursor:pointer;background:linear-gradient(135deg,#7c5cfc,#a855f7,#c084fc);color:#fff;letter-spacing:3px;text-transform:uppercase;transition:all .25s;position:relative;overflow:hidden}
+.start-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent,rgba(255,255,255,0.1),transparent);transform:translateX(-100%);transition:transform .5s}
+.start-btn:hover::before{transform:translateX(100%)}
+.start-btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(124,92,252,0.35)}
+
+/* ═══════════════════════════════════════════════
+   ACTIVE TIMER — Premium Design
+   ═══════════════════════════════════════════════ */
+.timer-page{display:none;position:fixed;inset:0;z-index:200;flex-direction:column;align-items:center;justify-content:center;transition:all .4s;overscroll-behavior:none;touch-action:manipulation}
+.timer-page.active{display:flex}
+
+/* Ambient particles behind timer */
+.timer-page canvas.timer-particles{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:0.6}
+
+/* Progress ring container */
+.timer-ring-wrap{position:relative;display:flex;align-items:center;justify-content:center;z-index:2}
+.timer-ring-wrap svg{position:absolute;filter:drop-shadow(0 0 12px currentColor)}
+
+.timer-display{font-size:110px;font-weight:700;z-index:3;text-align:center;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:2px;position:relative}
+
+/* Subtle reflection under the numbers */
+.timer-display::after{content:attr(data-time);position:absolute;left:0;right:0;top:100%;transform:scaleY(-0.3);opacity:0.06;filter:blur(2px);pointer-events:none;-webkit-mask-image:linear-gradient(to bottom,#000,transparent 60%);mask-image:linear-gradient(to bottom,#000,transparent 60%)}
+
+.timer-session-label{font-size:12px;letter-spacing:6px;text-transform:uppercase;opacity:0.4;margin-bottom:24px;z-index:2;font-weight:600}
+
+/* Elapsed / remaining subtitle */
+.timer-sub{font-size:13px;color:rgba(255,255,255,0.3);z-index:2;margin-top:8px;letter-spacing:1px;font-weight:500}
+
+/* Controls */
+.timer-controls{display:flex;gap:14px;margin-top:36px;z-index:10}
+.timer-ctrl-btn{width:52px;height:52px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.7);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;backdrop-filter:blur(16px)}
+.timer-ctrl-btn:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.3);color:#fff;transform:scale(1.08)}
+.timer-ctrl-btn svg{width:20px;height:20px;fill:currentColor}
+
+/* Percentage indicator */
+.timer-percent{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);font-size:14px;color:rgba(255,255,255,0.2);z-index:2;letter-spacing:2px;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* Fullscreen */
+.timer-page.fullscreen{cursor:none}
+.timer-page.fullscreen .timer-controls{opacity:0;transition:opacity .4s}
+.timer-page.fullscreen:hover .timer-controls{opacity:1;cursor:auto}
+.timer-page.fullscreen .timer-session-label{opacity:0}
+.timer-page.fullscreen .timer-percent{opacity:0}
+.timer-page.fullscreen:hover .timer-percent{opacity:0.2}
+
+/* ── Analytics ── */
+.analytics-container{max-width:1000px;margin:0 auto;padding:20px;display:flex;flex-direction:column;gap:18px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;text-align:center;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent)}
+.stat-value{font-size:30px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px;margin-top:4px;font-weight:600}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px 24px}
+.chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.chart-header h3{font-size:15px;font-weight:700}
+.chart-toggle{display:flex;gap:2px;background:var(--surface2);border-radius:8px;padding:3px}
+.chart-toggle button{padding:5px 13px;border:none;background:transparent;color:var(--text-dim);font-size:11px;border-radius:6px;cursor:pointer;transition:all .2s;font-weight:600}
+.chart-toggle button.active{background:var(--accent);color:#fff}
+
+.bar-chart{display:flex;align-items:flex-end;gap:4px;height:200px;padding-top:20px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.bar{width:100%;max-width:36px;background:linear-gradient(to top,var(--accent),var(--accent2));border-radius:6px 6px 2px 2px;min-height:2px;transition:height .5s ease;position:relative}
+.bar-value{font-size:10px;color:var(--text-dim);font-weight:700}
+.bar-label{font-size:10px;color:var(--text-dim);font-weight:500}
+
+.heatmap{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.heat-cell{aspect-ratio:1;border-radius:4px;background:var(--surface2)}
+.heat-cell[data-level="1"]{background:rgba(124,92,252,0.15)}
+.heat-cell[data-level="2"]{background:rgba(124,92,252,0.3)}
+.heat-cell[data-level="3"]{background:rgba(124,92,252,0.5)}
+.heat-cell[data-level="4"]{background:rgba(124,92,252,0.75)}
+.heat-labels{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:6px}
+.heat-labels span{text-align:center;font-size:10px;color:var(--text-dim);font-weight:600}
+
+.session-list{max-height:300px;overflow-y:auto}
+.session-item{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border);gap:10px}
+.session-item:last-child{border:none}
+.session-date{font-size:13px;font-weight:600}
+.session-duration{font-size:14px;color:var(--accent2);font-weight:800}
+.session-time{font-size:11px;color:var(--text-dim)}
+.session-right{display:flex;align-items:center;gap:12px}
+.session-del{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.session-del:hover{border-color:var(--danger);color:var(--danger);background:rgba(255,92,92,0.1)}
+
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+@media(max-width:768px){
+.nav{padding:0 14px;height:50px}
+.nav-logo{font-size:16px;letter-spacing:2px}
+.nav-tab{padding:6px 14px;font-size:12px}
+.setup-container{grid-template-columns:1fr;padding:12px;gap:14px}
+.card{padding:16px}
+.stats-row{grid-template-columns:repeat(2,1fr);gap:10px}
+.stat-card{padding:14px}
+.stat-value{font-size:24px}
+.timer-display{font-size:56px!important}
+.timer-display::after{display:none}
+.time-input{font-size:28px;width:68px;padding:8px 4px}
+.time-sep{font-size:28px}
+.preview-box{height:180px}
+.preview-time{font-size:42px}
+.start-btn{padding:16px;font-size:15px}
+.timer-controls{gap:12px;margin-top:28px}
+.timer-ctrl-btn{width:48px;height:48px}
+.timer-ring-wrap svg{width:260px;height:260px}
+.timer-session-label{font-size:10px;letter-spacing:4px}
+.timer-percent{bottom:24px;font-size:12px}
+.combo-count strong{font-size:16px}
+.page{padding-top:66px}
+.analytics-container{padding:12px}
+.chart-card{padding:16px}
+.bar-chart{height:160px}
+.session-item{padding:9px 0}
+}
+
+@media(max-width:400px){
+.time-input{font-size:24px;width:58px;padding:6px 2px}
+.time-sep{font-size:22px}
+.quick-times{gap:4px}
+.quick-time{padding:6px 10px;font-size:11px}
+.timer-display{font-size:42px!important}
+.timer-ring-wrap svg{width:200px;height:200px}
+.option-btn{padding:6px 10px;font-size:11px}
+.stats-row{grid-template-columns:1fr 1fr;gap:8px}
+.stat-value{font-size:20px}
+.nav-tabs{gap:1px}
+.nav-tab{padding:5px 10px;font-size:11px}
+}
+
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--surface2);border:1px solid var(--border);padding:12px 26px;border-radius:12px;font-size:13px;z-index:999;transition:transform .3s ease;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ── Layout Variants ── */
+.layout-centered{flex-direction:column}
+.layout-top{flex-direction:column;justify-content:flex-start;padding-top:14vh}
+.layout-bottom{flex-direction:column;justify-content:flex-end;padding-bottom:14vh}
+.layout-left{flex-direction:column;align-items:flex-start;padding-left:8vw}
+.layout-right{flex-direction:column;align-items:flex-end;padding-right:8vw}
+.layout-minimal .timer-session-label,.layout-minimal .timer-controls,.layout-minimal .timer-sub,.layout-minimal .timer-percent{display:none}
+.layout-split{flex-direction:row;gap:40px}
+.layout-top-left{flex-direction:column;align-items:flex-start;justify-content:flex-start;padding:10vh 0 0 8vw}
+.layout-top-right{flex-direction:column;align-items:flex-end;justify-content:flex-start;padding:10vh 8vw 0 0}
+.layout-cinema{flex-direction:column}
+.layout-cinema .timer-display{font-size:18vw!important}
+.layout-cinema .timer-session-label,.layout-cinema .timer-sub,.layout-cinema .timer-percent{display:none}
+
+/* ── Styles ── */
+.style-glow .timer-display{text-shadow:0 0 30px currentColor,0 0 60px currentColor,0 0 120px rgba(124,92,252,0.2)}
+.style-outline .timer-display{-webkit-text-stroke:2px currentColor;-webkit-text-fill-color:transparent}
+.style-thick-outline .timer-display{-webkit-text-stroke:4px currentColor;-webkit-text-fill-color:transparent}
+.style-shadow .timer-display{text-shadow:8px 8px 0 rgba(0,0,0,0.4)}
+.style-retro .timer-display{text-shadow:3px 3px 0 #ff6b6b,6px 6px 0 #ffd93d}
+.style-glass .timer-display{background:linear-gradient(180deg,rgba(255,255,255,0.95),rgba(255,255,255,0.5));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.style-neon .timer-display{text-shadow:0 0 7px currentColor,0 0 15px currentColor,0 0 30px currentColor,0 0 60px currentColor,0 0 100px currentColor}
+.style-3d .timer-display{text-shadow:0 1px 0 rgba(255,255,255,0.1),0 -1px 0 rgba(0,0,0,0.5),0 2px 3px rgba(0,0,0,0.3),0 4px 6px rgba(0,0,0,0.2)}
+.style-emboss .timer-display{text-shadow:1px 1px 0 rgba(255,255,255,0.15),-1px -1px 0 rgba(0,0,0,0.6)}
+.style-duotone .timer-display{background:linear-gradient(180deg,currentColor 40%,rgba(255,200,100,0.8));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.style-chrome .timer-display{background:linear-gradient(180deg,#fff 0%,#aaa 40%,#fff 50%,#888 60%,#fff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.style-fire .timer-display{background:linear-gradient(180deg,#fff 0%,#ff0 30%,#f80 60%,#f00 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.style-ice .timer-display{background:linear-gradient(180deg,#fff 0%,#88f 40%,#08f 80%,#04a 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.style-matrix .timer-display{color:#0f0;text-shadow:0 0 10px #0f0,0 0 30px #0f0}
+.style-blood .timer-display{color:#c00;text-shadow:0 0 10px #f00,0 2px 4px rgba(200,0,0,0.6)}
+.style-gold .timer-display{background:linear-gradient(180deg,#ffd700 0%,#b8860b 40%,#ffd700 50%,#daa520 70%,#ffd700 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 4px rgba(218,165,32,0.3))}
+
+/* ── Size Variants ── */
+.size-tiny .timer-display{font-size:48px}
+.size-small .timer-display{font-size:72px}
+.size-medium .timer-display{font-size:110px}
+.size-large .timer-display{font-size:160px}
+.size-huge .timer-display{font-size:220px}
+.size-fill .timer-display{font-size:16vw}
+.size-mega .timer-display{font-size:24vw}
+
+/* ── Animations ── */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+@keyframes flicker{0%,100%{opacity:1}48%{opacity:1}50%{opacity:.4}52%{opacity:1}80%{opacity:1}82%{opacity:.6}84%{opacity:1}}
+@keyframes drift{0%{transform:translateY(0)}50%{transform:translateY(-8px)}100%{transform:translateY(0)}}
+@keyframes glitch{0%,100%{transform:translate(0)}20%{transform:translate(-2px,1px)}40%{transform:translate(1px,-1px)}60%{transform:translate(-1px,2px)}80%{transform:translate(2px,-1px)}}
+@keyframes colorshift{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
+.anim-none .timer-display{animation:none}
+.anim-pulse .timer-display{animation:pulse 2s ease infinite}
+.anim-breathe .timer-display{animation:breathe 4s ease infinite}
+.anim-flicker .timer-display{animation:flicker 3s step-end infinite}
+.anim-drift .timer-display{animation:drift 6s ease-in-out infinite}
+.anim-glitch .timer-display{animation:glitch 4s ease infinite}
+.anim-colorshift .timer-display{animation:colorshift 8s linear infinite}
+
+/* ── Separator Styles (applied via JS) ── */
+
+/* ── Ring Styles ── */
+.ring-thin svg circle.ring-fg{stroke-width:2}
+.ring-normal svg circle.ring-fg{stroke-width:4}
+.ring-thick svg circle.ring-fg{stroke-width:8}
+.ring-dashed svg circle.ring-fg{stroke-dasharray:10 5}
+.ring-dotted svg circle.ring-fg{stroke-dasharray:2 6;stroke-linecap:round}
+.ring-none svg{display:none}
+
+/* Timer complete */
+.timer-complete-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:300;gap:16px}
+.timer-complete-overlay.active{display:flex}
+.timer-complete-overlay h2{font-size:44px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800}
+.timer-complete-overlay p{font-size:18px;color:var(--text-dim)}
+.timer-complete-overlay .complete-stats{display:flex;gap:30px;margin:10px 0}
+.timer-complete-overlay .complete-stat{text-align:center}
+.timer-complete-overlay .complete-stat-val{font-size:28px;font-weight:800;color:var(--accent2)}
+.timer-complete-overlay .complete-stat-lbl{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.timer-complete-overlay button{padding:14px 44px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--accent),#a855f7);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;transition:all .2s;letter-spacing:1px}
+.timer-complete-overlay button:hover{transform:scale(1.05);box-shadow:0 8px 30px rgba(124,92,252,0.4)}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">LOCKIN</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-page="setup">Timer</button>
+    <button class="nav-tab" data-page="analytics">Analytics</button>
+  </div>
+</nav>
+
+<div id="page-setup" class="page active">
+  <div class="setup-container">
+    <div class="setup-left">
+      <div class="card">
+        <div class="card-title">Set Duration</div>
+        <div class="time-input-group">
+          <div class="time-col">
+            <input type="number" id="inp-hours" class="time-input" value="0" min="0" max="23">
+            <div class="time-label">HOURS</div>
+          </div>
+          <span class="time-sep">:</span>
+          <div class="time-col">
+            <input type="number" id="inp-minutes" class="time-input" value="25" min="0" max="59">
+            <div class="time-label">MINUTES</div>
+          </div>
+          <span class="time-sep">:</span>
+          <div class="time-col">
+            <input type="number" id="inp-seconds" class="time-input" value="0" min="0" max="59">
+            <div class="time-label">SECONDS</div>
+          </div>
+        </div>
+        <div class="quick-times">
+          <button class="quick-time" data-m="5">5m</button>
+          <button class="quick-time" data-m="10">10m</button>
+          <button class="quick-time" data-m="15">15m</button>
+          <button class="quick-time" data-m="25">25m</button>
+          <button class="quick-time" data-m="30">30m</button>
+          <button class="quick-time" data-m="45">45m</button>
+          <button class="quick-time" data-m="60">1h</button>
+          <button class="quick-time" data-m="90">1.5h</button>
+          <button class="quick-time" data-m="120">2h</button>
+          <button class="quick-time" data-m="180">3h</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Preview</div>
+        <div class="preview-box" id="preview-box">
+          <span class="preview-time" id="preview-time">25:00</span>
+        </div>
+        <div class="combo-count">
+          <strong id="combo-count">0</strong> unique design combinations
+        </div>
+      </div>
+
+      <button class="start-btn" id="start-btn">Start Session</button>
+    </div>
+
+    <div class="setup-right">
+      <div class="card" style="max-height:calc(100vh - 110px);overflow-y:auto;overflow-x:hidden">
+        <div class="card-title">Customize Design</div>
+
+        <div class="option-group">
+          <div class="option-label">Font <span id="lbl-font"></span></div>
+          <div class="option-scroll" id="opt-font"></div>
+        </div>
+        <div class="option-group">
+          <div class="option-label">Timer Color <span id="lbl-color"></span></div>
+          <div class="color-grid" id="opt-color"></div>
+        </div>
+        <div class="option-group">
+          <div class="option-label">Background <span id="lbl-bg"></span></div>
+          <div class="bg-grid" id="opt-bg"></div>
+        </div>
+        <div class="option-group">
+          <div class="option-label">Layout <span id="lbl-layout"></span></div>
+          <div class="option-scroll" id="opt-layout"></div>
+        </div>
+        <div class="option-group">
+          <div class="option-label">Style <span id="lbl-style"></span></div>
+          <div class="option-scroll" id="opt-style"></div>
+        </div>
+        <div class="option-group">
+          <div class="option-label">Size <span id="lbl-size"></span></div>
+          <div class="option-scroll" id="opt-size"></div>
+        </div>
+        <div class="option-group">
+          <div class="option-label">Animation <span id="lbl-anim"></span></div>
+          <div class="option-scroll" id="opt-anim"></div>
+        </div>
+        <div class="option-group">
+          <div class="option-label">Separator <span id="lbl-sep"></span></div>
+          <div class="option-scroll" id="opt-sep"></div>
+        </div>
+        <div class="option-group">
+          <div class="option-label">Time Format <span id="lbl-format"></span></div>
+          <div class="option-scroll" id="opt-format"></div>
+        </div>
+        <div class="option-group">
+          <div class="option-label">Progress Ring <span id="lbl-ring"></span></div>
+          <div class="option-scroll" id="opt-ring"></div>
+        </div>
+        <div class="option-group">
+          <div class="option-label">Particles <span id="lbl-particle"></span></div>
+          <div class="option-scroll" id="opt-particle"></div>
+        </div>
+        <div class="option-group">
+          <div class="option-label">Sound <span id="lbl-sound"></span></div>
+          <div class="option-scroll" id="opt-sound"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="page-analytics" class="page">
+  <div class="analytics-container">
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-value" id="stat-today">0m</div><div class="stat-label">Today</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-week">0m</div><div class="stat-label">This Week</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-total">0m</div><div class="stat-label">All Time</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-streak">0</div><div class="stat-label">Day Streak</div></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>Daily Study Time</h3>
+        <div class="chart-toggle">
+          <button class="active" data-range="7">7D</button>
+          <button data-range="14">14D</button>
+          <button data-range="30">30D</button>
+        </div>
+      </div>
+      <div class="bar-chart" id="daily-chart"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><h3>Activity Heatmap (8 Weeks)</h3></div>
+      <div class="heat-labels"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+      <div class="heatmap" id="heatmap"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><h3>Recent Sessions</h3></div>
+      <div class="session-list" id="session-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Active Timer -->
+<div class="timer-page" id="timer-page">
+  <canvas class="timer-particles" id="timer-canvas"></canvas>
+  <div class="timer-session-label">FOCUS SESSION</div>
+  <div class="timer-ring-wrap">
+    <svg width="340" height="340" viewBox="0 0 340 340">
+      <circle cx="170" cy="170" r="160" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="4" class="ring-bg"/>
+      <circle id="progress-ring" cx="170" cy="170" r="160" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="1005.31" stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 170 170)" class="ring-fg" style="transition:stroke-dashoffset 1s linear;opacity:0.7"/>
+    </svg>
+    <div class="timer-display" id="timer-display" data-time="25:00">25:00</div>
+  </div>
+  <div class="timer-sub" id="timer-sub"></div>
+  <div class="timer-controls">
+    <button class="timer-ctrl-btn" id="btn-pause" title="Pause / Resume (Space)">
+      <svg viewBox="0 0 24 24"><path id="pause-icon" d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+    </button>
+    <button class="timer-ctrl-btn" id="btn-stop" title="Stop (Esc)">
+      <svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+    </button>
+    <button class="timer-ctrl-btn" id="btn-fullscreen" title="Fullscreen (F)">
+      <svg viewBox="0 0 24 24"><path d="M3 3h6v2H5v4H3V3zm12 0h6v6h-2V5h-4V3zM3 15h2v4h4v2H3v-6zm16 0h2v6h-6v-2h4v-4z"/></svg>
+    </button>
+  </div>
+  <div class="timer-percent" id="timer-percent">100%</div>
+</div>
+
+<!-- Complete -->
+<div class="timer-complete-overlay" id="timer-complete">
+  <h2>Session Complete!</h2>
+  <div class="complete-stats">
+    <div class="complete-stat"><div class="complete-stat-val" id="complete-dur">0m</div><div class="complete-stat-lbl">Duration</div></div>
+    <div class="complete-stat"><div class="complete-stat-val" id="complete-today">0m</div><div class="complete-stat-lbl">Today Total</div></div>
+    <div class="complete-stat"><div class="complete-stat-val" id="complete-streak">0</div><div class="complete-stat-lbl">Streak</div></div>
+  </div>
+  <button id="btn-complete-ok">Continue</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// OPTIONS DATA — many categories for 2M+ combos
+// ═══════════════════════════════════════════════════════
+
+const FONTS = [
+  {name:'Orbitron',family:"'Orbitron',sans-serif"},
+  {name:'Roboto Mono',family:"'Roboto Mono',monospace"},
+  {name:'JetBrains Mono',family:"'JetBrains Mono',monospace"},
+  {name:'Fira Code',family:"'Fira Code',monospace"},
+  {name:'Space Mono',family:"'Space Mono',monospace"},
+  {name:'Source Code Pro',family:"'Source Code Pro',monospace"},
+  {name:'IBM Plex Mono',family:"'IBM Plex Mono',monospace"},
+  {name:'Press Start 2P',family:"'Press Start 2P',monospace"},
+  {name:'Bebas Neue',family:"'Bebas Neue',sans-serif"},
+  {name:'Righteous',family:"'Righteous',sans-serif"},
+  {name:'Monoton',family:"'Monoton',cursive"},
+  {name:'Major Mono',family:"'Major Mono Display',monospace"},
+  {name:'Black Ops One',family:"'Black Ops One',sans-serif"},
+  {name:'Bungee Shade',family:"'Bungee Shade',cursive"},
+  {name:'Silkscreen',family:"'Silkscreen',monospace"},
+  {name:'Courier Prime',family:"'Courier Prime',monospace"},
+  {name:'Share Tech Mono',family:"'Share Tech Mono',monospace"},
+  {name:'VT323',family:"'VT323',monospace"},
+  {name:'Pixelify Sans',family:"'Pixelify Sans',sans-serif"},
+  {name:'Nova Mono',family:"'Nova Mono',monospace"},
+  {name:'Chakra Petch',family:"'Chakra Petch',sans-serif"},
+  {name:'Michroma',family:"'Michroma',sans-serif"},
+  {name:'Russo One',family:"'Russo One',sans-serif"},
+  {name:'Audiowide',family:"'Audiowide',sans-serif"},
+  {name:'Rajdhani',family:"'Rajdhani',sans-serif"},
+  {name:'Tektur',family:"'Tektur',sans-serif"},
+  {name:'Electrolize',family:"'Electrolize',sans-serif"},
+  {name:'Oxanium',family:"'Oxanium',sans-serif"},
+  {name:'Saira Stencil',family:"'Saira Stencil One',sans-serif"},
+  {name:'Tourney',family:"'Tourney',sans-serif"},
+];
+
+const COLORS = [
+  {name:'White',v:'#ffffff'},{name:'Snow',v:'#f0f0f5'},{name:'Silver',v:'#c0c0d0'},
+  {name:'Lavender',v:'#b8a4ff'},{name:'Purple',v:'#7c5cfc'},{name:'Violet',v:'#8b5cf6'},
+  {name:'Blue',v:'#60a5fa'},{name:'Sky',v:'#38bdf8'},{name:'Deep Blue',v:'#3b82f6'},
+  {name:'Cyan',v:'#22d3ee'},{name:'Teal',v:'#14b8a6'},{name:'Emerald',v:'#34d399'},
+  {name:'Green',v:'#4ade80'},{name:'Lime',v:'#a3e635'},{name:'Yellow',v:'#facc15'},
+  {name:'Amber',v:'#fbbf24'},{name:'Orange',v:'#fb923c'},{name:'Red',v:'#f87171'},
+  {name:'Rose',v:'#fb7185'},{name:'Pink',v:'#f472b6'},{name:'Hot Pink',v:'#ec4899'},
+  {name:'Fuchsia',v:'#d946ef'},{name:'Gold',v:'#ffd700'},{name:'Coral',v:'#ff7f50'},
+];
+
+const BACKGROUNDS = [
+  {name:'Void',s:'background:#000'},
+  {name:'Dark',s:'background:#0a0a12'},
+  {name:'Charcoal',s:'background:#18182a'},
+  {name:'Midnight',s:'background:#0c0c20'},
+  {name:'Navy',s:'background:#0a1428'},
+  {name:'Deep Blue',s:'background:#0c1445'},
+  {name:'Forest',s:'background:#081a0c'},
+  {name:'Wine',s:'background:#1a080c'},
+  {name:'Plum',s:'background:#1a0828'},
+  {name:'Storm',s:'background:#14203a'},
+  {name:'Slate',s:'background:#1e293b'},
+  {name:'Graphite',s:'background:#1c1c28'},
+  {name:'Night Sky',s:'background:linear-gradient(180deg,#0a0a1a,#141432)'},
+  {name:'Deep Space',s:'background:linear-gradient(135deg,#0f0c29,#302b63,#24243e)'},
+  {name:'Ocean',s:'background:linear-gradient(135deg,#0a1628,#162a50)'},
+  {name:'Dusk',s:'background:linear-gradient(135deg,#141e30,#243b55)'},
+  {name:'Cosmos',s:'background:linear-gradient(135deg,#1a0a2e,#16213e)'},
+  {name:'Nebula',s:'background:linear-gradient(135deg,#0a1628,#1a0a2e,#2a1040)'},
+  {name:'Sunset',s:'background:linear-gradient(135deg,#2d1b69,#6b2fa0,#c94b4b)'},
+  {name:'Aurora',s:'background:linear-gradient(135deg,#0a0f1a,#1a3a2a,#0a2a3a)'},
+  {name:'Ember',s:'background:linear-gradient(135deg,#1a0800,#3a1200)'},
+  {name:'Arctic',s:'background:linear-gradient(135deg,#0a1a2e,#1a3050,#0a2040)'},
+  {name:'Crimson',s:'background:linear-gradient(135deg,#1a0008,#3a0018,#200010)'},
+  {name:'Jade',s:'background:linear-gradient(135deg,#001a0a,#003a1a,#002010)'},
+  {name:'Twilight',s:'background:linear-gradient(180deg,#1a0030,#000020,#001030)'},
+  {name:'Abyss',s:'background:radial-gradient(ellipse at center,#101025,#000)'},
+  {name:'Spotlight',s:'background:radial-gradient(ellipse at center,#1a1a35,#050510)'},
+  {name:'Vortex',s:'background:radial-gradient(ellipse at 30% 50%,#1a1040,#000)'},
+];
+
+const LAYOUTS = [
+  {name:'Centered',cls:'layout-centered'},
+  {name:'Top',cls:'layout-top'},
+  {name:'Bottom',cls:'layout-bottom'},
+  {name:'Left',cls:'layout-left'},
+  {name:'Right',cls:'layout-right'},
+  {name:'Minimal',cls:'layout-minimal'},
+  {name:'Top Left',cls:'layout-top-left'},
+  {name:'Top Right',cls:'layout-top-right'},
+  {name:'Cinema',cls:'layout-cinema'},
+];
+
+const STYLES = [
+  {name:'Clean',cls:'style-clean'},
+  {name:'Glow',cls:'style-glow'},
+  {name:'Neon',cls:'style-neon'},
+  {name:'Outline',cls:'style-outline'},
+  {name:'Thick Outline',cls:'style-thick-outline'},
+  {name:'Shadow',cls:'style-shadow'},
+  {name:'Retro',cls:'style-retro'},
+  {name:'Glass',cls:'style-glass'},
+  {name:'3D',cls:'style-3d'},
+  {name:'Emboss',cls:'style-emboss'},
+  {name:'Duotone',cls:'style-duotone'},
+  {name:'Chrome',cls:'style-chrome'},
+  {name:'Fire',cls:'style-fire'},
+  {name:'Ice',cls:'style-ice'},
+  {name:'Matrix',cls:'style-matrix'},
+  {name:'Blood',cls:'style-blood'},
+  {name:'Gold',cls:'style-gold'},
+];
+
+const SIZES = [
+  {name:'Tiny',cls:'size-tiny'},
+  {name:'Small',cls:'size-small'},
+  {name:'Medium',cls:'size-medium'},
+  {name:'Large',cls:'size-large'},
+  {name:'Huge',cls:'size-huge'},
+  {name:'Fill',cls:'size-fill'},
+  {name:'Mega',cls:'size-mega'},
+];
+
+const ANIMS = [
+  {name:'None',cls:'anim-none'},
+  {name:'Pulse',cls:'anim-pulse'},
+  {name:'Breathe',cls:'anim-breathe'},
+  {name:'Flicker',cls:'anim-flicker'},
+  {name:'Drift',cls:'anim-drift'},
+  {name:'Glitch',cls:'anim-glitch'},
+  {name:'Color Shift',cls:'anim-colorshift'},
+];
+
+const SEPS = [
+  {name:':  Colon',v:':'},
+  {name:'.  Dot',v:'.'},
+  {name:'-  Dash',v:'-'},
+  {name:'/  Slash',v:'/'},
+  {name:'|  Pipe',v:'|'},
+  {name:'   Space',v:' '},
+];
+
+const FORMATS = [
+  {name:'MM:SS',v:'mmss'},
+  {name:'HH:MM:SS',v:'hhmmss'},
+  {name:'H:MM:SS',v:'hmmss'},
+  {name:'Decimal Min',v:'decimal'},
+];
+
+const RINGS = [
+  {name:'Normal',cls:'ring-normal'},
+  {name:'Thin',cls:'ring-thin'},
+  {name:'Thick',cls:'ring-thick'},
+  {name:'Dashed',cls:'ring-dashed'},
+  {name:'Dotted',cls:'ring-dotted'},
+  {name:'Hidden',cls:'ring-none'},
+];
+
+const PARTICLES = [
+  {name:'None',v:'none'},
+  {name:'Stars',v:'stars'},
+  {name:'Fireflies',v:'fireflies'},
+  {name:'Snow',v:'snow'},
+  {name:'Rain',v:'rain'},
+  {name:'Bokeh',v:'bokeh'},
+  {name:'Embers',v:'embers'},
+];
+
+const SOUNDS = [
+  {name:'Bell',v:'bell'},
+  {name:'Chime',v:'chime'},
+  {name:'Beep',v:'beep'},
+  {name:'Gong',v:'gong'},
+  {name:'Silent',v:'silent'},
+];
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+
+let S = {font:0,color:0,bg:0,layout:0,style:0,size:2,anim:0,sep:0,format:0,ring:0,particle:0,sound:0};
+try { Object.assign(S, JSON.parse(localStorage.getItem('lockin_prefs')||'{}')); } catch(e){}
+
+let T = {running:false,paused:false,totalSeconds:0,remaining:0,interval:null,startTime:null,pausedTime:0,pauseStart:0};
+
+// ═══════════════════════════════════════
+// BUILD UI
+// ═══════════════════════════════════════
+
+function buildUI() {
+  // Fonts
+  const fc = document.getElementById('opt-font');
+  FONTS.forEach((f,i) => {
+    const b = document.createElement('button');
+    b.className = 'option-btn'+(i===S.font?' selected':'');
+    b.textContent = f.name;
+    b.style.fontFamily = f.family;
+    b.onclick = () => { S.font=i; refresh(); };
+    fc.appendChild(b);
+  });
+
+  // Colors
+  const cc = document.getElementById('opt-color');
+  COLORS.forEach((c,i) => {
+    const d = document.createElement('div');
+    d.className = 'color-swatch'+(i===S.color?' selected':'');
+    d.style.background = c.v;
+    d.title = c.name;
+    d.onclick = () => { S.color=i; refresh(); };
+    cc.appendChild(d);
+  });
+
+  // Backgrounds
+  const bc = document.getElementById('opt-bg');
+  BACKGROUNDS.forEach((b,i) => {
+    const d = document.createElement('div');
+    d.className = 'bg-option'+(i===S.bg?' selected':'');
+    d.setAttribute('style', b.s);
+    d.textContent = b.name;
+    d.onclick = () => { S.bg=i; refresh(); };
+    bc.appendChild(d);
+  });
+
+  // Generic builder
+  const cats = [
+    ['layout',LAYOUTS],['style',STYLES],['size',SIZES],['anim',ANIMS],
+    ['sep',SEPS],['format',FORMATS],['ring',RINGS],['particle',PARTICLES],['sound',SOUNDS]
+  ];
+  cats.forEach(([key, arr]) => {
+    const container = document.getElementById('opt-'+key);
+    arr.forEach((item,i) => {
+      const b = document.createElement('button');
+      b.className = 'option-btn'+(i===S[key]?' selected':'');
+      b.textContent = item.name;
+      b.onclick = () => { S[key]=i; refresh(); };
+      container.appendChild(b);
+    });
+  });
+
+  updateLabels();
+  updatePreview();
+}
+
+function refresh() {
+  // Update selections visually
+  document.querySelectorAll('#opt-font .option-btn').forEach((b,i) => b.classList.toggle('selected',i===S.font));
+  document.querySelectorAll('#opt-color .color-swatch').forEach((b,i) => b.classList.toggle('selected',i===S.color));
+  document.querySelectorAll('#opt-bg .bg-option').forEach((b,i) => b.classList.toggle('selected',i===S.bg));
+  ['layout','style','size','anim','sep','format','ring','particle','sound'].forEach(key => {
+    document.querySelectorAll('#opt-'+key+' .option-btn').forEach((b,i) => b.classList.toggle('selected',i===S[key]));
+  });
+  updateLabels();
+  updatePreview();
+  localStorage.setItem('lockin_prefs', JSON.stringify(S));
+}
+
+function updateLabels() {
+  document.getElementById('lbl-font').textContent = FONTS.length+' options';
+  document.getElementById('lbl-color').textContent = COLORS.length+' options';
+  document.getElementById('lbl-bg').textContent = BACKGROUNDS.length+' options';
+  document.getElementById('lbl-layout').textContent = LAYOUTS.length+' options';
+  document.getElementById('lbl-style').textContent = STYLES.length+' options';
+  document.getElementById('lbl-size').textContent = SIZES.length+' options';
+  document.getElementById('lbl-anim').textContent = ANIMS.length+' options';
+  document.getElementById('lbl-sep').textContent = SEPS.length+' options';
+  document.getElementById('lbl-format').textContent = FORMATS.length+' options';
+  document.getElementById('lbl-ring').textContent = RINGS.length+' options';
+  document.getElementById('lbl-particle').textContent = PARTICLES.length+' options';
+  document.getElementById('lbl-sound').textContent = SOUNDS.length+' options';
+
+  const total = FONTS.length*COLORS.length*BACKGROUNDS.length*LAYOUTS.length*STYLES.length*SIZES.length*ANIMS.length*SEPS.length*FORMATS.length*RINGS.length*PARTICLES.length*SOUNDS.length;
+  document.getElementById('combo-count').textContent = total.toLocaleString();
+}
+
+function updatePreview() {
+  const box = document.getElementById('preview-box');
+  const time = document.getElementById('preview-time');
+  box.setAttribute('style', BACKGROUNDS[S.bg].s);
+  time.style.fontFamily = FONTS[S.font].family;
+  time.style.color = COLORS[S.color].v;
+  const h=parseInt(document.getElementById('inp-hours').value)||0;
+  const m=parseInt(document.getElementById('inp-minutes').value)||0;
+  const s=parseInt(document.getElementById('inp-seconds').value)||0;
+  time.textContent = fmtTime(h*3600+m*60+s);
+}
+
+// ═══════════════════════════════════════
+// TIME FORMATTING
+// ═══════════════════════════════════════
+
+function fmtTime(sec) {
+  const h = Math.floor(sec/3600);
+  const m = Math.floor((sec%3600)/60);
+  const s = sec%60;
+  const sep = SEPS[S.sep].v;
+  const fmt = FORMATS[S.format].v;
+
+  if (fmt==='hhmmss') return pad(h)+sep+pad(m)+sep+pad(s);
+  if (fmt==='hmmss') return h+sep+pad(m)+sep+pad(s);
+  if (fmt==='decimal') return (sec/60).toFixed(1)+'m';
+  // mmss
+  if (h>0) return h+sep+pad(m)+sep+pad(s);
+  return pad(m)+sep+pad(s);
+}
+function pad(n){return String(n).padStart(2,'0')}
+
+// ═══════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════
+
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('page-'+tab.dataset.page).classList.add('active');
+    if(tab.dataset.page==='analytics') renderAnalytics();
+  });
+});
+
+document.querySelectorAll('.quick-time').forEach(b => {
+  b.addEventListener('click', () => {
+    const mins=parseInt(b.dataset.m);
+    document.getElementById('inp-hours').value=Math.floor(mins/60);
+    document.getElementById('inp-minutes').value=mins%60;
+    document.getElementById('inp-seconds').value=0;
+    updatePreview();
+  });
+});
+
+['inp-hours','inp-minutes','inp-seconds'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updatePreview);
+});
+
+// ═══════════════════════════════════════
+// TIMER ENGINE
+// ═══════════════════════════════════════
+
+function startTimer() {
+  const h=parseInt(document.getElementById('inp-hours').value)||0;
+  const m=parseInt(document.getElementById('inp-minutes').value)||0;
+  const s=parseInt(document.getElementById('inp-seconds').value)||0;
+  const total=h*3600+m*60+s;
+  if(total<=0){showToast('Set a time first!');return}
+
+  T.totalSeconds=total;T.remaining=total;T.running=true;T.paused=false;
+  T.startTime=Date.now();T.pausedTime=0;
+
+  applyTimerDesign();
+  document.getElementById('timer-page').classList.add('active');
+  document.querySelector('.nav').style.display='none';
+  updateTimerUI();
+  startParticles();
+  T.interval=setInterval(timerTick,200);
+}
+
+function applyTimerDesign() {
+  const page=document.getElementById('timer-page');
+  const disp=document.getElementById('timer-display');
+  const ring=document.getElementById('progress-ring');
+
+  // Reset
+  page.className='timer-page active';
+  page.classList.add(LAYOUTS[S.layout].cls, STYLES[S.style].cls, SIZES[S.size].cls, ANIMS[S.anim].cls, RINGS[S.ring].cls);
+  page.setAttribute('style', BACKGROUNDS[S.bg].s);
+
+  disp.style.fontFamily=FONTS[S.font].family;
+  disp.style.color=COLORS[S.color].v;
+  ring.style.color=COLORS[S.color].v;
+}
+
+function timerTick() {
+  if(T.paused) return;
+  const elapsed=Math.floor((Date.now()-T.startTime-T.pausedTime)/1000);
+  T.remaining=Math.max(0,T.totalSeconds-elapsed);
+  updateTimerUI();
+  if(T.remaining<=0) completeTimer();
+}
+
+function updateTimerUI() {
+  const disp=document.getElementById('timer-display');
+  const text=fmtTime(T.remaining);
+  disp.textContent=text;
+  disp.setAttribute('data-time',text);
+
+  // Progress ring
+  const circ=2*Math.PI*160;
+  const prog=T.remaining/T.totalSeconds;
+  document.getElementById('progress-ring').style.strokeDashoffset=circ*(1-prog);
+
+  // Percent
+  document.getElementById('timer-percent').textContent=Math.round(prog*100)+'%';
+
+  // Sub text
+  const elapsed=T.totalSeconds-T.remaining;
+  document.getElementById('timer-sub').textContent='Elapsed '+fmtTime(elapsed);
+}
+
+function completeTimer() {
+  clearInterval(T.interval);
+  T.running=false;
+  stopParticles();
+  saveSession(T.totalSeconds);
+  playSound();
+  if(isFullscreen()){const efs=document.exitFullscreen||document.webkitExitFullscreen;if(efs)efs.call(document)}
+  document.getElementById('timer-page').classList.remove('fullscreen');
+
+  const sessions=getSessions();
+  const today=new Date().toDateString();
+  const todaySec=sessions.filter(s=>new Date(s.date).toDateString()===today).reduce((a,s)=>a+s.duration,0);
+
+  document.getElementById('complete-dur').textContent=fmtMin(T.totalSeconds);
+  document.getElementById('complete-today').textContent=fmtMin(todaySec);
+  document.getElementById('complete-streak').textContent=calcStreak(sessions);
+  document.getElementById('timer-complete').classList.add('active');
+}
+
+function stopTimer() {
+  clearInterval(T.interval);
+  stopParticles();
+  const elapsed=T.totalSeconds-T.remaining;
+  if(elapsed>=10) saveSession(elapsed);
+  T.running=false;
+  document.getElementById('timer-page').classList.remove('active');
+  document.querySelector('.nav').style.display='flex';
+  if(isFullscreen()){const efs=document.exitFullscreen||document.webkitExitFullscreen;if(efs)efs.call(document)}
+  document.getElementById('timer-page').classList.remove('fullscreen');
+}
+
+function togglePause() {
+  const icon=document.getElementById('pause-icon');
+  if(T.paused){
+    T.pausedTime+=Date.now()-T.pauseStart;
+    T.paused=false;
+    icon.setAttribute('d','M6 4h4v16H6zM14 4h4v16h-4z');
+  } else {
+    T.paused=true;
+    T.pauseStart=Date.now();
+    icon.setAttribute('d','M8 5v14l11-7z');
+  }
+}
+
+function isFullscreen() {
+  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+}
+
+function toggleFullscreen() {
+  const page=document.getElementById('timer-page');
+  if(!isFullscreen()){
+    const rfs = page.requestFullscreen || page.webkitRequestFullscreen || page.msRequestFullscreen;
+    if(rfs) rfs.call(page).then(()=>page.classList.add('fullscreen')).catch(()=>{
+      // Fallback for devices that don't support fullscreen API (e.g. older iOS)
+      page.classList.toggle('fullscreen');
+    });
+    else page.classList.add('fullscreen'); // pure CSS fallback
+  } else {
+    const efs = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+    if(efs) efs.call(document);
+    page.classList.remove('fullscreen');
+  }
+}
+
+['fullscreenchange','webkitfullscreenchange'].forEach(evt => {
+  document.addEventListener(evt, ()=>{
+    if(!isFullscreen()) document.getElementById('timer-page').classList.remove('fullscreen');
+  });
+});
+
+document.getElementById('start-btn').addEventListener('click',startTimer);
+document.getElementById('btn-pause').addEventListener('click',togglePause);
+document.getElementById('btn-stop').addEventListener('click',stopTimer);
+document.getElementById('btn-fullscreen').addEventListener('click',toggleFullscreen);
+document.getElementById('btn-complete-ok').addEventListener('click',()=>{
+  document.getElementById('timer-complete').classList.remove('active');
+  document.getElementById('timer-page').classList.remove('active');
+  document.querySelector('.nav').style.display='flex';
+});
+
+document.addEventListener('keydown',e=>{
+  if(!T.running) return;
+  if(e.code==='Space'){e.preventDefault();togglePause()}
+  if(e.code==='Escape') stopTimer();
+  if(e.code==='KeyF') toggleFullscreen();
+});
+
+// ═══════════════════════════════════════
+// PARTICLES ENGINE
+// ═══════════════════════════════════════
+
+let particleRAF=null;
+let particles=[];
+
+function startParticles() {
+  const type=PARTICLES[S.particle].v;
+  if(type==='none'){stopParticles();return}
+  const canvas=document.getElementById('timer-canvas');
+  const ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+  particles=[];
+
+  const count=type==='rain'?120:type==='snow'?80:50;
+  for(let i=0;i<count;i++) particles.push(createParticle(type,canvas));
+
+  function loop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p=>{ updateParticle(p,type,canvas); drawParticle(ctx,p,type); });
+    particleRAF=requestAnimationFrame(loop);
+  }
+  loop();
+
+  window._particleResize=()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight};
+  window.addEventListener('resize',window._particleResize);
+  window.addEventListener('orientationchange',()=>setTimeout(window._particleResize,100));
+}
+
+function stopParticles() {
+  if(particleRAF){cancelAnimationFrame(particleRAF);particleRAF=null}
+  const canvas=document.getElementById('timer-canvas');
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(window._particleResize) window.removeEventListener('resize',window._particleResize);
+}
+
+function createParticle(type,canvas) {
+  const w=canvas.width,h=canvas.height;
+  if(type==='stars') return {x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.5+0.5,a:Math.random(),da:Math.random()*0.02-0.01};
+  if(type==='fireflies') return {x:Math.random()*w,y:Math.random()*h,r:Math.random()*3+1,vx:Math.random()*0.5-0.25,vy:Math.random()*0.5-0.25,a:Math.random(),da:Math.random()*0.03};
+  if(type==='snow') return {x:Math.random()*w,y:Math.random()*h,r:Math.random()*3+1,vy:Math.random()*0.8+0.2,vx:Math.random()*0.4-0.2,a:Math.random()*0.5+0.3};
+  if(type==='rain') return {x:Math.random()*w,y:Math.random()*h,len:Math.random()*15+5,vy:Math.random()*4+6,a:Math.random()*0.2+0.1};
+  if(type==='bokeh') return {x:Math.random()*w,y:Math.random()*h,r:Math.random()*30+10,vx:Math.random()*0.3-0.15,vy:Math.random()*0.3-0.15,a:Math.random()*0.08+0.02};
+  if(type==='embers') return {x:Math.random()*w,y:h+Math.random()*20,r:Math.random()*2+1,vx:Math.random()*0.6-0.3,vy:-(Math.random()*1.5+0.5),a:Math.random()*0.6+0.2,life:1};
+  return {x:0,y:0,r:1};
+}
+
+function updateParticle(p,type,canvas) {
+  const w=canvas.width,h=canvas.height;
+  if(type==='stars'){p.a+=p.da;if(p.a>1||p.a<0)p.da*=-1}
+  if(type==='fireflies'){p.x+=p.vx;p.y+=p.vy;p.a+=p.da;if(p.a>1||p.a<0.1)p.da*=-1;if(p.x<0||p.x>w)p.vx*=-1;if(p.y<0||p.y>h)p.vy*=-1}
+  if(type==='snow'){p.y+=p.vy;p.x+=p.vx;if(p.y>h){p.y=-5;p.x=Math.random()*w}}
+  if(type==='rain'){p.y+=p.vy;if(p.y>h){p.y=-20;p.x=Math.random()*w}}
+  if(type==='bokeh'){p.x+=p.vx;p.y+=p.vy;if(p.x<-40||p.x>w+40)p.vx*=-1;if(p.y<-40||p.y>h+40)p.vy*=-1}
+  if(type==='embers'){p.x+=p.vx+Math.sin(Date.now()*0.001+p.x)*0.3;p.y+=p.vy;p.life-=0.002;if(p.life<=0){p.x=Math.random()*w;p.y=h+10;p.life=1;p.a=Math.random()*0.6+0.2}}
+}
+
+function drawParticle(ctx,p,type) {
+  const col=COLORS[S.color].v;
+  if(type==='stars'){ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${Math.abs(p.a)*0.6})`;ctx.fill()}
+  if(type==='fireflies'){ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=hexToRgba(col,Math.abs(p.a)*0.5);ctx.shadowColor=col;ctx.shadowBlur=15;ctx.fill();ctx.shadowBlur=0}
+  if(type==='snow'){ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${p.a})`;ctx.fill()}
+  if(type==='rain'){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x,p.y+p.len);ctx.strokeStyle=`rgba(180,200,255,${p.a})`;ctx.lineWidth=1;ctx.stroke()}
+  if(type==='bokeh'){ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=hexToRgba(col,p.a);ctx.fill()}
+  if(type==='embers'){ctx.beginPath();ctx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);ctx.fillStyle=hexToRgba('#ff6030',p.a*p.life);ctx.shadowColor='#ff4000';ctx.shadowBlur=8;ctx.fill();ctx.shadowBlur=0}
+}
+
+function hexToRgba(hex,a) {
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+// ═══════════════════════════════════════
+// SOUND
+// ═══════════════════════════════════════
+
+function playSound() {
+  const s=SOUNDS[S.sound].v;
+  if(s==='silent') return;
+  const ctx=new(window.AudioContext||window.webkitAudioContext)();
+
+  function tone(freq,type,dur,delay=0,vol=0.2){
+    setTimeout(()=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.type=type;o.frequency.value=freq;
+      g.gain.setValueAtTime(vol,ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);
+      o.start();o.stop(ctx.currentTime+dur);
+    },delay);
+  }
+
+  if(s==='bell') tone(830,'sine',1.5);
+  if(s==='chime'){tone(1200,'triangle',0.8);tone(1600,'triangle',0.8,300)}
+  if(s==='beep'){tone(600,'square',0.3,0,0.12);tone(600,'square',0.3,400,0.12);tone(600,'square',0.3,800,0.12)}
+  if(s==='gong'){tone(120,'sine',3,0,0.3);tone(240,'sine',2,50,0.15);tone(360,'sine',1.5,100,0.08)}
+}
+
+// ═══════════════════════════════════════
+// SESSIONS / ANALYTICS
+// ═══════════════════════════════════════
+
+function getSessions(){try{return JSON.parse(localStorage.getItem('lockin_sessions')||'[]')}catch{return[]}}
+function saveSession(dur){const s=getSessions();s.push({date:new Date().toISOString(),duration:dur});localStorage.setItem('lockin_sessions',JSON.stringify(s))}
+function fmtMin(sec){const m=Math.round(sec/60);if(m<60)return m+'m';return Math.floor(m/60)+'h '+m%60+'m'}
+
+function calcStreak(sessions) {
+  if(!sessions.length) return 0;
+  const days=new Set(sessions.map(s=>new Date(s.date).toDateString()));
+  let streak=0,d=new Date();d.setHours(0,0,0,0);
+  if(!days.has(d.toDateString())){d.setDate(d.getDate()-1);if(!days.has(d.toDateString()))return 0}
+  while(days.has(d.toDateString())){streak++;d.setDate(d.getDate()-1)}
+  return streak;
+}
+
+function renderAnalytics() {
+  const sessions=getSessions();
+  const today=new Date().toDateString();
+  const todaySec=sessions.filter(s=>new Date(s.date).toDateString()===today).reduce((a,s)=>a+s.duration,0);
+  const ws=new Date();ws.setDate(ws.getDate()-ws.getDay());ws.setHours(0,0,0,0);
+  const weekSec=sessions.filter(s=>new Date(s.date)>=ws).reduce((a,s)=>a+s.duration,0);
+  const totalSec=sessions.reduce((a,s)=>a+s.duration,0);
+
+  document.getElementById('stat-today').textContent=fmtMin(todaySec);
+  document.getElementById('stat-week').textContent=fmtMin(weekSec);
+  document.getElementById('stat-total').textContent=fmtMin(totalSec);
+  document.getElementById('stat-streak').textContent=calcStreak(sessions);
+
+  renderChart(sessions,7);
+  renderHeatmap(sessions);
+  renderSessionList(sessions);
+
+  document.querySelectorAll('.chart-toggle button').forEach(btn=>{
+    btn.onclick=()=>{
+      document.querySelectorAll('.chart-toggle button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      renderChart(sessions,parseInt(btn.dataset.range));
+    };
+  });
+}
+
+function renderChart(sessions,days) {
+  const chart=document.getElementById('daily-chart');chart.innerHTML='';
+  const data=[];
+  for(let i=days-1;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);d.setHours(0,0,0,0);
+    const ds=d.toDateString();
+    const val=sessions.filter(s=>new Date(s.date).toDateString()===ds).reduce((a,s)=>a+s.duration,0);
+    data.push({label:d.toLocaleDateString('en',{weekday:'short'}),value:Math.round(val/60)});
+  }
+  const max=Math.max(...data.map(d=>d.value),1);
+  data.forEach(d=>{
+    const col=document.createElement('div');col.className='bar-col';
+    const v=document.createElement('div');v.className='bar-value';v.textContent=d.value>0?d.value+'m':'';
+    const bar=document.createElement('div');bar.className='bar';bar.style.height=Math.max(2,(d.value/max)*160)+'px';
+    const l=document.createElement('div');l.className='bar-label';l.textContent=d.label;
+    col.append(v,bar,l);chart.appendChild(col);
+  });
+}
+
+function renderHeatmap(sessions) {
+  const hm=document.getElementById('heatmap');hm.innerHTML='';
+  const dm={};sessions.forEach(s=>{const k=new Date(s.date).toDateString();dm[k]=(dm[k]||0)+s.duration});
+  const today=new Date();const dow=(today.getDay()+6)%7;
+  const start=new Date(today);start.setDate(start.getDate()-dow-49);
+  for(let i=0;i<56;i++){
+    const d=new Date(start);d.setDate(d.getDate()+i);
+    const mins=Math.round((dm[d.toDateString()]||0)/60);
+    const cell=document.createElement('div');cell.className='heat-cell';
+    cell.title=d.toLocaleDateString('en',{month:'short',day:'numeric'})+': '+mins+'m';
+    let lv=0;if(mins>0)lv=1;if(mins>=30)lv=2;if(mins>=60)lv=3;if(mins>=120)lv=4;
+    cell.setAttribute('data-level',lv);hm.appendChild(cell);
+  }
+}
+
+function deleteSession(dateISO) {
+  let sessions=getSessions();
+  sessions=sessions.filter(s=>s.date!==dateISO);
+  localStorage.setItem('lockin_sessions',JSON.stringify(sessions));
+  renderAnalytics();
+  showToast('Session removed');
+}
+
+function renderSessionList(sessions) {
+  const list=document.getElementById('session-list');list.innerHTML='';
+  const sorted=[...sessions].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,50);
+  if(!sorted.length){list.innerHTML='<p style="text-align:center;color:var(--text-dim);padding:40px 0">No sessions yet. Start studying!</p>';return}
+  sorted.forEach(s=>{
+    const d=new Date(s.date);
+    const item=document.createElement('div');item.className='session-item';
+
+    const left=document.createElement('div');
+    left.innerHTML=`<div class="session-date">${d.toLocaleDateString('en',{weekday:'short',month:'short',day:'numeric'})}</div><div class="session-time">${d.toLocaleTimeString('en',{hour:'numeric',minute:'2-digit'})}</div>`;
+
+    const right=document.createElement('div');right.className='session-right';
+    const dur=document.createElement('div');dur.className='session-duration';dur.textContent=Math.round(s.duration/60)+'m';
+    const del=document.createElement('button');del.className='session-del';del.title='Delete session';del.innerHTML='&times;';
+    del.onclick=()=>deleteSession(s.date);
+
+    right.append(dur,del);
+    item.append(left,right);
+    list.appendChild(item);
+  });
+}
+
+// ═══════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════
+
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ═══════════════════════════════════════
+// DRAG-TO-SCROLL on all horizontal rows
+// ═══════════════════════════════════════
+
+function initDragScroll() {
+  document.querySelectorAll('.option-scroll, .color-grid, .bg-grid').forEach(el => {
+    let isDown = false, startX, scrollLeft;
+
+    // Mouse events
+    el.addEventListener('mousedown', e => {
+      isDown = true;
+      el.classList.add('dragging');
+      startX = e.pageX - el.offsetLeft;
+      scrollLeft = el.scrollLeft;
+    });
+    el.addEventListener('mouseleave', () => { isDown = false; el.classList.remove('dragging'); });
+    el.addEventListener('mouseup', () => { isDown = false; el.classList.remove('dragging'); });
+    el.addEventListener('mousemove', e => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - el.offsetLeft;
+      el.scrollLeft = scrollLeft - (x - startX) * 1.5;
+    });
+
+    // Touch events — native scroll works, but allow momentum-style swiping
+    el.style.webkitOverflowScrolling = 'touch';
+  });
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+buildUI();
+initDragScroll();
+</script>
+</body>
+</html>
